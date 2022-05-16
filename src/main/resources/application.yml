@@ -4,3 +4,22 @@ spring:
     serverTimezone: UTC #Override detection/mapping of time zone. Used when time zone from server doesn't map to Java time zone
     username: root
     password: 123456789
+  jpa:
+    generate-sql: true
+    show-sql: true
+    hibernate:
+      ddl-auto: create #Create the tables
+      format_sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL57Dialect #Set engine InnoDB to support foreying key
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
