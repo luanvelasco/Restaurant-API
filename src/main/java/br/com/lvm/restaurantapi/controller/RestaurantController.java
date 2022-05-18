@@ -6,14 +6,18 @@ import br.com.lvm.restaurantapi.domain.model.Kitchen;
 import br.com.lvm.restaurantapi.domain.model.Restaurant;
 import br.com.lvm.restaurantapi.domain.service.KitchenService;
 import br.com.lvm.restaurantapi.domain.service.RestaurantService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
+import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/restaurant")
@@ -74,6 +78,23 @@ public class RestaurantController {
         return ResponseEntity.notFound().build();
     }
 
+    @PatchMapping("/{restaurantId}")
+    public ResponseEntity<?> parcialUpdateRestaurant(
+            @PathVariable Long restaurantId,
+            @RequestBody Map<String, Object> fields){
+
+        Restaurant restaurantToBeUpdate = restaurantService.searchRestaurantById(restaurantId);
+
+        if (restaurantToBeUpdate == null){
+            return ResponseEntity.notFound().build();
+        }
+
+        merge(fields, restaurantToBeUpdate);
+
+        return updateRestaurant(restaurantId, restaurantToBeUpdate);
+
+    }
+
     @DeleteMapping("/{restaurantId}")
     public  ResponseEntity<Kitchen> deleteRestaurant(@PathVariable Long restaurantId){
         try {
@@ -89,4 +110,32 @@ public class RestaurantController {
     }
 
 
+    /*
+     * The function of this method is to merge the updated values
+     * of (fields) into the object (restaurantToBeUpdate)
+     *
+     * Let's use Reflections: is the ability for us to inspect java objects at runtime and even
+     *  change these objects through methods or by calling attributes.
+     */
+    private void merge(Map<String, Object> fields, Restaurant restaurantToBeUpdate) {
+
+        //Let's use ObjectMapper to serialize the json to object To resolve conversion issues
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        Restaurant restaurantMappedFields = objectMapper.convertValue(fields, Restaurant.class);
+
+        fields.forEach((propertyName, propertyValue) -> {
+
+            Field field = ReflectionUtils.findField(Restaurant.class, propertyName);
+
+            //to make the variable accessible
+            field.setAccessible(true);
+
+            Object newValue = ReflectionUtils.getField(field, restaurantMappedFields);
+
+            System.out.println(propertyName + " = " + propertyValue + " = " + newValue);
+
+            ReflectionUtils.setField(field, restaurantToBeUpdate, newValue);
+        });
+    }
 }
