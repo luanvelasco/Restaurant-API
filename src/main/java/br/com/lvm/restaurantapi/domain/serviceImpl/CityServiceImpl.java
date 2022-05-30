@@ -1,4 +1,4 @@
-package br.com.lvm.restaurantapi.domain.serviceImp;
+package br.com.lvm.restaurantapi.domain.serviceImpl;
 
 import br.com.lvm.restaurantapi.domain.exception.EntityInUseException;
 import br.com.lvm.restaurantapi.domain.exception.EntityWasNotFoundException;
@@ -13,9 +13,10 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
-public class CityServiceImp implements CityService {
+public class CityServiceImpl implements CityService {
 
     @Autowired
     private CityRepository cityRepository;
@@ -25,33 +26,30 @@ public class CityServiceImp implements CityService {
 
     @Override
     public List<City> findAllCities() {
-        return cityRepository.findAllCities();
+        return cityRepository.findAll();
     }
 
     @Override
-    public City searchCityById(Long id) {
-        return cityRepository.searchCityById(id);
+    public Optional<City> searchCityById(Long id) {
+        return cityRepository.findById(id);
     }
 
     @Override
     public City saveNewCity(City city) {
         Long stateId = city.getState().getId();
-        State state = stateRepository.searchStateById(stateId);
-
-        if (state == null){
-            throw new EntityWasNotFoundException(
-                    String.format("There wasn't found any state with code %d", stateId));
-        }
+        State state = stateRepository.findById(stateId)
+                .orElseThrow(()->new EntityWasNotFoundException(
+                        String.format("There wasn't found any state with code %d", stateId)));
 
         city.setState(state);
-        return cityRepository.saveNewCity(city);
+        return cityRepository.save(city);
     }
 
     @Override
     public void deleteCity(Long id) {
         try {
 
-            cityRepository.deleteCity(id);
+            cityRepository.deleteById(id);
 
         }catch (EmptyResultDataAccessException e){ //Data access exception thrown when a result was expected to have at least one row (or element) but zero rows (or elements) were actually returned.
             throw new EntityWasNotFoundException(

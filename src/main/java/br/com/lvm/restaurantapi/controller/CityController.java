@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.w3c.dom.Entity;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/city")
@@ -27,10 +28,10 @@ public class CityController {
 
     @GetMapping("/{cityId}")
     public ResponseEntity<City> findCityById(@PathVariable Long cityId){
-        City city = cityService.searchCityById(cityId);
+        Optional<City> city = cityService.searchCityById(cityId);
 
-        if (city != null){
-            return ResponseEntity.ok(city);
+        if (city.isPresent()){
+            return ResponseEntity.ok(city.get());
         }
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -52,21 +53,32 @@ public class CityController {
     }
 
     @PutMapping("/{cityId}")
-    public ResponseEntity<City> updateCity(
+    public ResponseEntity<?> updateCity(
             @PathVariable Long cityId,
             @RequestBody City city){
 
-        City actualCity = cityService.searchCityById(cityId);
+        try {
+            City actualCity = cityService.searchCityById(cityId).orElse(null);
 
-        if (actualCity != null){
-            BeanUtils.copyProperties(city, actualCity, "id");
+            if (actualCity != null){
+                BeanUtils.copyProperties(city, actualCity, "id");
 
-            cityService.saveNewCity(actualCity);
+                City savedCity = cityService.saveNewCity(actualCity);
 
-            return ResponseEntity.ok(actualCity);
+                return ResponseEntity.ok(savedCity);
+            }
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+        }catch (EntityWasNotFoundException e){
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+
+
+
+
     }
 
 

@@ -1,4 +1,4 @@
-package br.com.lvm.restaurantapi.domain.serviceImp;
+package br.com.lvm.restaurantapi.domain.serviceImpl;
 
 import br.com.lvm.restaurantapi.domain.exception.EntityInUseException;
 import br.com.lvm.restaurantapi.domain.exception.EntityWasNotFoundException;
@@ -10,36 +10,35 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
-
-
 import java.util.List;
+import java.util.Optional;
 
 @Service
-public class KitchenServiceImp implements KitchenService {
+public class KitchenServiceImpl implements KitchenService {
 
     @Autowired
     private KitchenRepository kitchenRepository;
 
     @Override
     public List<Kitchen> findAllKitchens() {
-        return kitchenRepository.findAllKitchens();
+        return kitchenRepository.findAll();
     }
 
     @Override
-    public Kitchen searchKitchenById(Long id){
-            return kitchenRepository.searchKitchenById(id);
+    public Optional<Kitchen> searchKitchenById(Long id){
+            return kitchenRepository.findById(id);
     }
 
     @Override
     public Kitchen saveNewKitchen(Kitchen kitchen) {
-        return kitchenRepository.saveNewKitchen(kitchen);
+        return kitchenRepository.save(kitchen);
     }
 
     @Override
     public void deleteKitchen(Long kitchenId) {
         try {
 
-            kitchenRepository.deleteKitchen(kitchenId);
+            kitchenRepository.deleteById(kitchenId);
 
         }catch (EmptyResultDataAccessException e){ //Data access exception thrown when a result was expected to have at least one row (or element) but zero rows (or elements) were actually returned.
             throw new EntityWasNotFoundException(

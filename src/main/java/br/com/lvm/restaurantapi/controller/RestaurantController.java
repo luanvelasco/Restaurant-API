@@ -18,6 +18,7 @@ import javax.persistence.EntityNotFoundException;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/restaurant")
@@ -37,10 +38,10 @@ public class RestaurantController {
     @GetMapping("/{restaurantId}")
     public ResponseEntity<Restaurant> findRestaurantById(@PathVariable Long restaurantId){
 
-        Restaurant restaurant = restaurantService.searchRestaurantById(restaurantId);
+        Optional<Restaurant> restaurant = restaurantService.searchRestaurantById(restaurantId);
 
-        if (restaurant != null){
-            return ResponseEntity.ok(restaurant);
+        if (restaurant.isPresent()){
+            return ResponseEntity.ok(restaurant.get());
         }
 
         return ResponseEntity.notFound().build();
@@ -61,21 +62,27 @@ public class RestaurantController {
     }
 
     @PutMapping("/{restaurantId}")
-    public ResponseEntity<Restaurant> updateRestaurant(
+    public ResponseEntity<?> updateRestaurant(
             @PathVariable Long restaurantId,
             @RequestBody Restaurant restaurant){
 
-        Restaurant actualRestaurant = restaurantService.searchRestaurantById(restaurantId);
+        try {
 
-        if (actualRestaurant != null){
-            BeanUtils.copyProperties(restaurant, actualRestaurant, "id");
+            Restaurant actualRestaurant = restaurantService.searchRestaurantById(restaurantId).orElse(null);
 
-            restaurantService.saveNewRestaurant(actualRestaurant);
+            if (actualRestaurant != null ){
+                BeanUtils.copyProperties(restaurant, actualRestaurant, "id", "paymentType", "address");
 
-            return ResponseEntity.ok(actualRestaurant);
+                Restaurant savedRestaurant = restaurantService.saveNewRestaurant(actualRestaurant);
+
+                return ResponseEntity.ok(savedRestaurant);
+            }
+
+            return ResponseEntity.notFound().build();
+
+        }catch (EntityWasNotFoundException e){
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-
-        return ResponseEntity.notFound().build();
     }
 
     @PatchMapping("/{restaurantId}")
@@ -83,7 +90,8 @@ public class RestaurantController {
             @PathVariable Long restaurantId,
             @RequestBody Map<String, Object> fields){
 
-        Restaurant restaurantToBeUpdate = restaurantService.searchRestaurantById(restaurantId);
+        Restaurant restaurantToBeUpdate = restaurantService.searchRestaurantById(restaurantId)
+                .orElse(null);
 
         if (restaurantToBeUpdate == null){
             return ResponseEntity.notFound().build();

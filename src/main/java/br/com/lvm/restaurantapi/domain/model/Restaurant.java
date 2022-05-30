@@ -1,11 +1,14 @@
 package br.com.lvm.restaurantapi.domain.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -26,4 +29,15 @@ public class Restaurant {
     @ManyToOne
     @JoinColumn(name = "kitchen_id", nullable = false)
     private Kitchen kitchen;
+
+    @JsonIgnore
+    @Embedded
+    private Address address;
+
+    @JsonIgnore
+    @ManyToMany
+    @JoinTable(name = "restaurant_payment_type",
+            joinColumns = @JoinColumn(name = "restaurant_id"),
+            inverseJoinColumns = @JoinColumn(name = "payment_type_id"))
+    private List<Payment> paymentType = new ArrayList<>();
 }

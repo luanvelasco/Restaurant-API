@@ -1,12 +1,8 @@
 package br.com.lvm.restaurantapi.domain.repository;
 
 import br.com.lvm.restaurantapi.domain.model.Restaurant;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
-public interface RestaurantRepository {
-    List<Restaurant> findAllRestaurants();
-    Restaurant searchRestaurantById(Long id);
-    Restaurant saveNewRestaurant(Restaurant restaurant);
-    void deleteRestaurant(Long id);
-}
+@Repository
+public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {}

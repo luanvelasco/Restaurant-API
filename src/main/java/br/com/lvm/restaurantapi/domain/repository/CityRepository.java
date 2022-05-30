@@ -1,12 +1,8 @@
 package br.com.lvm.restaurantapi.domain.repository;
 
 import br.com.lvm.restaurantapi.domain.model.City;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
-public interface CityRepository {
-    List<City> findAllCities();
-    City searchCityById(Long id);
-    City saveNewCity(City city);
-    void deleteCity(Long id);
-}
+@Repository
+public interface CityRepository extends JpaRepository<City, Long> {}
